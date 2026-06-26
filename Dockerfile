@@ -28,16 +28,16 @@ RUN cd apps/admin && npx next build 2>/dev/null || echo "admin build skipped"
 FROM base AS runner
 WORKDIR /app
 
-# Copy built apps
+# Copy built apps and ALL required source files
 COPY --from=builder /app/apps/storefront/.next ./apps/storefront/.next
 COPY --from=builder /app/apps/admin/.next ./apps/admin/.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json /app/pnpm-workspace.yaml /app/turbo.json /app/tsconfig.json ./
 COPY --from=builder /app/packages ./packages
-COPY --from=builder /app/apps/storefront/next.config.ts ./apps/storefront/
-COPY --from=builder /app/apps/storefront/package.json ./apps/storefront/
-COPY --from=builder /app/apps/admin/next.config.ts ./apps/admin/
-COPY --from=builder /app/apps/admin/package.json ./apps/admin/
+COPY --from=builder /app/apps/storefront ./apps/storefront
+COPY --from=builder /app/apps/admin ./apps/admin
+COPY --from=builder /app/apps/storefront/public ./apps/storefront/public 2>/dev/null || true
+COPY --from=builder /app/apps/admin/public ./apps/admin/public 2>/dev/null || true
 
 ENV NODE_ENV=production
 ENV PORT=3456
