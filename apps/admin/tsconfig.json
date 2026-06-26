@@ -1,0 +1,48 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "jsx": "preserve",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./*"
+      ],
+      "@watermart/core": [
+        "../../packages/core/src/index.ts"
+      ],
+      "@watermart/core/*": [
+        "../../packages/core/src/*"
+      ],
+      "@watermart/product": [
+        "../../packages/modules/product/src/index.ts"
+      ],
+      "@watermart/product/*": [
+        "../../packages/modules/product/src/*"
+      ]
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "allowJs": true,
+    "noEmit": true,
+    "incremental": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

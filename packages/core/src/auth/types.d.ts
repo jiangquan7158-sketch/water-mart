@@ -1,0 +1,82 @@
+export declare const Permission: {
+    readonly PRODUCT_VIEW: "product:view";
+    readonly PRODUCT_CREATE: "product:create";
+    readonly PRODUCT_EDIT: "product:edit";
+    readonly PRODUCT_DELETE: "product:delete";
+    readonly PRODUCT_PUBLISH: "product:publish";
+    readonly ORDER_VIEW: "order:view";
+    readonly ORDER_EDIT: "order:edit";
+    readonly ORDER_CANCEL: "order:cancel";
+    readonly ORDER_REFUND: "order:refund";
+    readonly ORDER_EXPORT: "order:export";
+    readonly USER_VIEW: "user:view";
+    readonly USER_CREATE: "user:create";
+    readonly USER_EDIT: "user:edit";
+    readonly USER_DELETE: "user:delete";
+    readonly USER_BAN: "user:ban";
+    readonly CATEGORY_VIEW: "category:view";
+    readonly CATEGORY_CREATE: "category:create";
+    readonly CATEGORY_EDIT: "category:edit";
+    readonly CATEGORY_DELETE: "category:delete";
+    readonly CONTENT_VIEW: "content:view";
+    readonly CONTENT_EDIT: "content:edit";
+    readonly CONTENT_PUBLISH: "content:publish";
+    readonly MARKETING_VIEW: "marketing:view";
+    readonly COUPON_CREATE: "coupon:create";
+    readonly COUPON_EDIT: "coupon:edit";
+    readonly COUPON_DELETE: "coupon:delete";
+    readonly NOTIFICATION_SEND: "notification:send";
+    readonly AFFILIATE_VIEW: "affiliate:view";
+    readonly AFFILIATE_APPROVE: "affiliate:approve";
+    readonly AFFILIATE_SUSPEND: "affiliate:suspend";
+    readonly AFFILIATE_PAYOUT: "affiliate:payout";
+    readonly ANALYTICS_VIEW: "analytics:view";
+    readonly ANALYTICS_EXPORT: "analytics:export";
+    readonly SETTINGS_VIEW: "settings:view";
+    readonly SETTINGS_EDIT: "settings:edit";
+    readonly IMPORT_DATA: "import:data";
+    readonly EXPORT_DATA: "export:data";
+    readonly REVIEW_MODERATE: "review:moderate";
+    readonly SCRAPE_CREATE: "scrape:create";
+    readonly SCRAPE_VIEW: "scrape:view";
+    readonly SCRAPE_PUBLISH: "scrape:publish";
+    readonly SYSTEM_LOGS: "system:logs";
+    readonly SYSTEM_CONFIG: "system:config";
+    readonly SYSTEM_HEALTH: "system:health";
+};
+export type Permission = (typeof Permission)[keyof typeof Permission];
+export declare const Role: {
+    readonly CUSTOMER: "CUSTOMER";
+    readonly ADMIN: "ADMIN";
+    readonly SUPER_ADMIN: "SUPER_ADMIN";
+    readonly MODERATOR: "MODERATOR";
+    readonly EDITOR: "EDITOR";
+    readonly AFFILIATE: "AFFILIATE";
+};
+export type Role = (typeof Role)[keyof typeof Role];
+export declare const ROLE_PERMISSIONS: Record<Role, readonly Permission[]>;
+export interface User {
+    id: string;
+    email: string;
+    emailVerified: Date | null;
+    name: string | null;
+    avatar: string | null;
+    role: Role;
+    locale: string;
+    metadata: Record<string, unknown>;
+    createdAt: Date;
+    updatedAt: Date;
+}
+export interface Session {
+    id: string;
+    token: string;
+    userId: string;
+    expiresAt: Date;
+    userAgent: string | null;
+    ip: string | null;
+    user?: User;
+}
+export declare function hasPermission(userRole: Role, permission: Permission): boolean;
+export declare function hasAnyPermission(userRole: Role, permissions: Permission[]): boolean;
+export declare function hasAllPermissions(userRole: Role, permissions: Permission[]): boolean;
+//# sourceMappingURL=types.d.ts.map

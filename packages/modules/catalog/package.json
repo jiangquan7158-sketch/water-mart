@@ -1,0 +1,24 @@
+{
+  "name": "@watermart/catalog",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WaterMart Catalog Module",
+  "type": "module",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js", "default": "./dist/index.js" },
+    "./*": { "types": "./dist/*.d.ts", "import": "./dist/*.js", "default": "./dist/*.js" }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "prettier --check \"src/**/*.ts\"",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf dist .turbo node_modules"
+  },
+  "dependencies": {
+    "@watermart/core": "workspace:*",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": { "typescript": "^5.8.0", "vitest": "^3.1.0" }
+}
