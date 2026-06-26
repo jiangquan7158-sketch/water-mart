@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import {
   DollarSign,
   ShoppingBag,
@@ -146,7 +146,7 @@ function CustomTooltip({
 // ── Page Component ───────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const revenueData = useMemo(() => generateRevenueData(), []);
+  const revenueData = generateRevenueData();
 
   return (
     <div className="space-y-6">
