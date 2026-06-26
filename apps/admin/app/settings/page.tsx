@@ -465,9 +465,9 @@ function ShippingTab() {
 function PaymentsTab() {
   // Stripe state
   const [stripeEnabled, setStripeEnabled] = useState(true);
-  const [stripePublicKey, setStripePublicKey] = useState('pk_test_placeholder');
-  const [stripeSecretKey, setStripeSecretKey] = useState('sk_test_placeholder');
-  const [stripeWebhookSecret, setStripeWebhookSecret] = useState('whsec_placeholder');
+  const [stripePublicKey, setStripePublicKey] = useState('pk_test_xxxxxxxxxxxxxxxxxxxx');
+  const [stripeSecretKey, setStripeSecretKey] = useState('sk_test_xxxxxxxxxxxxxxxxxxxx');
+  const [stripeWebhookSecret, setStripeWebhookSecret] = useState('whsec_xxxxxxxxxxxxxxxxxxxx');
   const [stripeTestMode, setStripeTestMode] = useState(false);
   const [showStripeSecret, setShowStripeSecret] = useState(false);
   const [showStripeWebhook, setShowStripeWebhook] = useState(false);
