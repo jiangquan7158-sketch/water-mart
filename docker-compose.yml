@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  watermart:
+    build: .
+    container_name: watermart
+    restart: unless-stopped
+    ports:
+      - "3456:3456"
+      - "3457:3457"
+    volumes:
+      - watermart_data:/app/data
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:/app/data/watermart.db
+      - AI_API_KEY=${AI_API_KEY:-}
+      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-http://localhost:3456}
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3456/en"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  watermart_data:
+    driver: local
+

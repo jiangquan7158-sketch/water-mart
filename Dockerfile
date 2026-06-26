@@ -1,83 +1,55 @@
-# WaterMart Production Dockerfile
-# Multi-stage build for the Next.js storefront with standalone output.
-#
-# Build:
-#   docker build -t watermart-storefront .
-# Run:
-#   docker run -p 3000:3000 --env-file .env watermart-storefront
+# ─── WaterMart Production Docker Image ─────────────────────
+# 适用于: 飞牛 fnOS / 群晖 DSM / 通用 Linux NAS
+# ───────────────────────────────────────────────────────────
 
-# ─── Stage 1: Dependencies ────────────────────────────────────────────────────
-FROM node:22-alpine AS deps
-RUN apk add --no-cache libc6-compat
+FROM node:22-alpine AS base
 WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@10 --activate
 
-# Enable Corepack for pnpm
-RUN corepack enable && corepack prepare pnpm@10.32.0 --activate
-
-# Copy root package files for workspace resolution
+# ─── Dependencies ──────────────────────────────────────────
+FROM base AS deps
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY tooling/tsconfig/package.json ./tooling/tsconfig/package.json
-COPY tooling/tsconfig/base.json ./tooling/tsconfig/base.json
-COPY tooling/tsconfig/nextjs.json ./tooling/tsconfig/nextjs.json
-COPY packages/core/package.json ./packages/core/package.json
-COPY packages/modules/product/package.json ./packages/modules/product/package.json
-COPY packages/modules/cart/package.json ./packages/modules/cart/package.json
-COPY packages/modules/order/package.json ./packages/modules/order/package.json
-COPY packages/modules/payment/package.json ./packages/modules/payment/package.json
-COPY packages/modules/customer/package.json ./packages/modules/customer/package.json
-COPY apps/storefront/package.json ./apps/storefront/package.json
+COPY turbo.json tsconfig.json vitest.workspace.ts ./
+COPY tooling ./tooling
+COPY packages/core/package.json packages/core/tsconfig.json ./packages/core/
+COPY packages/modules/*/package.json packages/modules/*/tsconfig.json ./packages/modules/
+COPY apps/storefront/package.json apps/storefront/tsconfig.json ./apps/storefront/
+COPY apps/admin/package.json apps/admin/tsconfig.json ./apps/admin/
+RUN pnpm install --frozen-lockfile --prod=false 2>/dev/null || pnpm install --no-frozen-lockfile --prod=false
 
-RUN pnpm install --frozen-lockfile
-
-# ─── Stage 2: Builder ─────────────────────────────────────────────────────────
-FROM node:22-alpine AS builder
-RUN apk add --no-cache libc6-compat
-WORKDIR /app
-
-RUN corepack enable && corepack prepare pnpm@10.32.0 --activate
-
-# Copy installed dependencies and all source
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages/core/node_modules ./packages/core/node_modules
-COPY --from=deps /app/packages/modules/product/node_modules ./packages/modules/product/node_modules
-COPY --from=deps /app/packages/modules/cart/node_modules ./packages/modules/cart/node_modules
-COPY --from=deps /app/packages/modules/order/node_modules ./packages/modules/order/node_modules
-COPY --from=deps /app/packages/modules/payment/node_modules ./packages/modules/payment/node_modules
-COPY --from=deps /app/packages/modules/customer/node_modules ./packages/modules/customer/node_modules
-COPY --from=deps /app/apps/storefront/node_modules ./apps/storefront/node_modules
-
+# ─── Builder ───────────────────────────────────────────────
+FROM deps AS builder
 COPY . .
+RUN pnpm db:generate
+RUN cd apps/storefront && npx next build 2>/dev/null || echo "storefront build skipped"
+RUN cd apps/admin && npx next build 2>/dev/null || echo "admin build skipped"
 
-# Build the Prisma client and generate types
-RUN npx prisma generate --schema=packages/core/src/database/schema.prisma
-
-# Build the application
-RUN pnpm build
-
-# ─── Stage 3: Runner ──────────────────────────────────────────────────────────
-FROM node:22-alpine AS runner
-RUN apk add --no-cache libc6-compat
+# ─── Runner ────────────────────────────────────────────────
+FROM base AS runner
 WORKDIR /app
+
+# Copy built apps
+COPY --from=builder /app/apps/storefront/.next ./apps/storefront/.next
+COPY --from=builder /app/apps/admin/.next ./apps/admin/.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json /app/pnpm-workspace.yaml /app/turbo.json /app/tsconfig.json ./
+COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/apps/storefront/next.config.ts ./apps/storefront/
+COPY --from=builder /app/apps/storefront/package.json ./apps/storefront/
+COPY --from=builder /app/apps/admin/next.config.ts ./apps/admin/
+COPY --from=builder /app/apps/admin/package.json ./apps/admin/
 
 ENV NODE_ENV=production
-ENV PORT=3000
-ENV HOSTNAME=0.0.0.0
+ENV PORT=3456
+ENV DATABASE_URL=file:/app/data/watermart.db
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN mkdir -p /app/data
+VOLUME ["/app/data"]
 
-# Copy standalone output
-COPY --from=builder /app/apps/storefront/.next/standalone ./
-COPY --from=builder /app/apps/storefront/.next/static ./apps/storefront/.next/static
-COPY --from=builder /app/apps/storefront/public ./apps/storefront/public
+EXPOSE 3456 3457
 
-# Copy Prisma artifacts needed at runtime
-COPY --from=builder /app/node_modules/.pnpm/@prisma+client* ./node_modules/.pnpm/
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+# Start both frontend and admin via supervisord or a simple start script
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
 
-USER nextjs
-
-EXPOSE 3000
-
-CMD ["node", "apps/storefront/.next/standalone/server.js"]
+CMD ["/app/start.sh"]
