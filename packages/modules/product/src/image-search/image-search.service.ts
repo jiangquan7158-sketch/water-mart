@@ -82,7 +82,7 @@ export class ImageSearchService {
     for (const image of images) {
       if (!image.perceptualHash) continue;
 
-      const imageBytes = Array.from(new Uint8Array(image.perceptualHash));
+      const imageBytes = Array.from(new Uint8Array(Buffer.from(image.perceptualHash, 'hex')));
       let distance = 0;
 
       // Calculate Hamming distance byte by byte
@@ -129,7 +129,7 @@ export class ImageSearchService {
     for (const image of images) {
       if (!image.perceptualHash) continue;
 
-      const imageHash = bytesToHex(new Uint8Array(image.perceptualHash));
+      const imageHash = bytesToHex(new Uint8Array(Buffer.from(image.perceptualHash, 'hex')));
       const distance = hammingDistance(phash, imageHash);
 
       if (distance <= 10) {
@@ -194,7 +194,7 @@ export class ImageSearchService {
       if (existing) {
         await prisma.productImage.update({
           where: { id: existing.id },
-          data: { perceptualHash: hashBuffer },
+          data: { perceptualHash: hashBuffer.toString('hex') },
         });
       } else {
         // Get the max sort order for this product
@@ -208,7 +208,7 @@ export class ImageSearchService {
           data: {
             productId,
             url: imageUrl,
-            perceptualHash: hashBuffer,
+            perceptualHash: hashBuffer.toString('hex'),
             alt: null,
             sortOrder: (maxSort?.sortOrder ?? -1) + 1,
           },

@@ -250,7 +250,7 @@ export class ProductService {
             sku: v.sku,
             price: v.price,
             stock: v.stock,
-            attributes: (v.attributes ?? {}) as Prisma.InputJsonValue,
+            attributes: JSON.stringify(v.attributes ?? {}),
             sortOrder: idx,
           })),
         });

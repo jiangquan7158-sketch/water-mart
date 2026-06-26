@@ -70,7 +70,7 @@ export class ScraperManager {
     // Create ScrapeJob in DB
     const job = await prisma.scrapeJob.create({
       data: {
-        urls,
+        urls: JSON.stringify(urls),
         status: 'QUEUED',
       },
     });
@@ -128,7 +128,7 @@ export class ScraperManager {
             jobId,
             sourceUrl: url,
             platform: adapter?.getPlatformName() ?? 'unknown',
-            rawData: scraped as unknown as Prisma.InputJsonValue,
+            rawData: JSON.stringify(scraped),
             status: 'SCRAPED',
           },
         });
@@ -144,7 +144,7 @@ export class ScraperManager {
             jobId,
             sourceUrl: url,
             platform: 'unknown',
-            rawData: { error: errorMessage },
+            rawData: JSON.stringify({ error: errorMessage }),
             status: 'FAILED',
           },
         });

@@ -117,8 +117,7 @@ export class ProductRepository {
 
     if (search) {
       where.OR = [
-        { slug: { contains: search, mode: 'insensitive' } },
-        { metadata: { path: ['searchText'], string_contains: search } },
+        { slug: { contains: search } },
       ];
     }
 
@@ -172,10 +171,10 @@ export class ProductRepository {
     const product = await prisma.product.create({
       data: {
         slug,
-        translations: translations as Prisma.InputJsonValue,
+        translations: JSON.stringify(translations),
         basePrice,
         currency,
-        metadata: (metadata ?? {}) as Prisma.InputJsonValue,
+        metadata: JSON.stringify(metadata ?? {}),
         images: images
           ? {
               create: images.map((img, idx) => ({
@@ -192,8 +191,8 @@ export class ProductRepository {
                 price: v.price,
                 compareAtPrice: v.compareAtPrice ?? null,
                 stock: v.stock,
-                translations: (v.translations ?? {}) as Prisma.InputJsonValue,
-                attributes: (v.attributes ?? {}) as Prisma.InputJsonValue,
+                translations: JSON.stringify(v.translations ?? {}),
+                attributes: JSON.stringify(v.attributes ?? {}),
                 sortOrder: v.sortOrder ?? idx,
               })),
             }
@@ -227,12 +226,12 @@ export class ProductRepository {
     if (input.slug !== undefined) data.slug = input.slug;
     if (input.status !== undefined) data.status = input.status;
     if (input.translations !== undefined) {
-      data.translations = input.translations as Prisma.InputJsonValue;
+      data.translations = JSON.stringify(input.translations);
     }
     if (input.basePrice !== undefined) data.basePrice = input.basePrice;
     if (input.currency !== undefined) data.currency = input.currency;
     if (input.metadata !== undefined) {
-      data.metadata = input.metadata as Prisma.InputJsonValue;
+      data.metadata = JSON.stringify(input.metadata);
     }
     if (input.publishedAt !== undefined) data.publishedAt = input.publishedAt;
 
@@ -286,8 +285,7 @@ export class ProductRepository {
     }
     if (search) {
       where.OR = [
-        { slug: { contains: search, mode: 'insensitive' } },
-        { metadata: { path: ['searchText'], string_contains: search } },
+        { slug: { contains: search } },
       ];
     }
 
@@ -313,8 +311,8 @@ export class ProductRepository {
 
     for (const image of images) {
       if (!image.perceptualHash) continue;
-      const imageHash = bytesToHex(new Uint8Array(image.perceptualHash));
-      const distance = hammingDistanceBytes(targetBytes, new Uint8Array(image.perceptualHash));
+      const imageHash = bytesToHex(new Uint8Array(Buffer.from(image.perceptualHash ?? "", "hex")));
+      const distance = hammingDistanceBytes(targetBytes, new Uint8Array(Buffer.from(image.perceptualHash ?? "", "hex")));
       if (distance <= threshold) {
         results.push({ image, distance });
       }

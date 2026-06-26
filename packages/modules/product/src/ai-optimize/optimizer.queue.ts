@@ -209,7 +209,7 @@ export class OptimizationQueue {
           throw new Error(`ScrapeResult "${job.resultId}" no longer exists`);
         }
 
-        const rawData = scrapeResult.rawData as Record<string, unknown>;
+        const rawData = JSON.parse(scrapeResult.rawData) as Record<string, unknown>;
 
         // Yield the job for processing
         yield {
@@ -238,7 +238,7 @@ export class OptimizationQueue {
         await prisma.scrapeResult.update({
           where: { id: job.resultId },
           data: {
-            aiOptimized: optimized as unknown as Prisma.InputJsonValue,
+            aiOptimized: JSON.stringify(optimized),
             status: 'OPTIMIZED',
           },
         });
