@@ -168,11 +168,11 @@ export default function ProductDetailPage() {
           {/* Price */}
           <div className="mt-4 flex items-baseline gap-3">
             <span className="text-3xl font-bold text-gray-900">
-              ${product.salePrice.toFixed(2)}
+              {product.salePrice}
             </span>
-            <span className="text-lg text-gray-400 line-through">${product.price.toFixed(2)}</span>
+            <span className="text-lg text-gray-400 line-through">{product.price}</span>
             <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
-              Save ${(product.price - product.salePrice).toFixed(2)}
+              Save {(product.price - product.salePrice).toFixed(2)}
             </span>
           </div>
 

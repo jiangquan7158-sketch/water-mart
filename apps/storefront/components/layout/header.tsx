@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Search,
   ShoppingCart,
@@ -16,6 +17,12 @@ import {
   LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+const locales = [
+  'en', 'zh', 'ja', 'ko', 'de', 'fr', 'es', 'pt',
+  'ar', 'ru', 'hi', 'th', 'vi', 'id', 'it', 'nl',
+  'pl', 'sv', 'tr', 'uk',
+];
 
 const LANGUAGES: Record<string, string> = {
   en: 'English',
@@ -52,6 +59,8 @@ const CURRENCIES = [
 export function Header() {
   const t = useTranslations();
   const locale = useLocale();
+  const pathname = usePathname();
+  const router = useRouter();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
@@ -63,6 +72,20 @@ export function Header() {
   const langRef = useRef<HTMLDivElement>(null);
   const currencyRef = useRef<HTMLDivElement>(null);
   const accountRef = useRef<HTMLDivElement>(null);
+
+  // Switch locale by replacing the leading /<locale> segment in the pathname.
+  const switchLocale = (nextLocale: string) => {
+    const segments = pathname.split('/');
+    // pathname is like "/en/search" → ["", "en", "search"]
+    const current = segments[1];
+    if (current && locales.includes(current)) {
+      segments[1] = nextLocale;
+    } else {
+      segments.splice(1, 0, nextLocale);
+    }
+    const next = segments.join('/') || `/${nextLocale}`;
+    router.push(next);
+  };
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -146,7 +169,10 @@ export function Header() {
                   {Object.entries(LANGUAGES).map(([code, name]) => (
                     <a
                       key={code}
-                      href={`/${code}`}
+                      onClick={() => {
+                        switchLocale(code);
+                        setIsLangOpen(false);
+                      }}
                       className={cn(
                         'flex items-center gap-2 px-4 py-2 text-sm transition-colors hover:bg-gray-50',
                         code === locale ? 'font-semibold text-sky-600 bg-sky-50' : 'text-gray-700'
@@ -342,9 +368,12 @@ export function Header() {
               </div>
               <div className="flex flex-wrap gap-2 px-4 py-2">
                 {Object.entries(LANGUAGES).slice(0, 8).map(([code, name]) => (
-                  <a
+                  <button
                     key={code}
-                    href={`/${code}`}
+                    onClick={() => {
+                      switchLocale(code);
+                      setIsMobileMenuOpen(false);
+                    }}
                     className={cn(
                       'rounded-full px-3 py-1 text-xs font-medium',
                       code === locale
@@ -353,7 +382,7 @@ export function Header() {
                     )}
                   >
                     {name}
-                  </a>
+                  </button>
                 ))}
               </div>
             </nav>

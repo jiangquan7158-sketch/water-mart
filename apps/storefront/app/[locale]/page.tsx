@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import { Search, Upload, Star, ShoppingCart, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import ImageUpload from '@/components/search/image-upload';
 
 interface ProductFromAPI {
   id: string;
@@ -60,6 +61,41 @@ export default function HomePage() {
   const [products, setProducts] = useState<ProductFromAPI[]>([]);
   const [categories, setCategories] = useState<CategoryFromAPI[]>([]);
   const [loading, setLoading] = useState(true);
+  const [image, setImage] = useState<File | null>(null);
+  const [searching, setSearching] = useState(false);
+
+  const removeImage = () => setImage(null);
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // Keyword-only search: go straight to the search page.
+    if (searchQuery.trim() && !image) {
+      window.location.href = `/${locale}/search?q=${encodeURIComponent(searchQuery.trim())}`;
+      return;
+    }
+    // Image search: upload the file, then navigate to results by id.
+    if (image) {
+      setSearching(true);
+      try {
+        const formData = new FormData();
+        formData.append('image', image);
+        if (searchQuery.trim()) formData.append('q', searchQuery.trim());
+        const res = await fetch('/api/search', { method: 'POST', body: formData });
+        const data = res.ok ? await res.json() : [];
+        const slugs = (data as Array<{ slug: string }>).map((p) => p.slug).filter(Boolean);
+        if (slugs.length > 0) {
+          window.location.href = `/${locale}/search?ids=${encodeURIComponent(slugs.join(','))}`;
+        } else {
+          // No matches — still open the search page so the user can refine.
+          window.location.href = `/${locale}/search?q=${encodeURIComponent(searchQuery.trim())}`;
+        }
+      } catch {
+        window.location.href = `/${locale}/search?q=${encodeURIComponent(searchQuery.trim())}`;
+      } finally {
+        setSearching(false);
+      }
+    }
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -103,13 +139,6 @@ export default function HomePage() {
     return cat.slug;
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      window.location.href = `/${locale}/search?q=${encodeURIComponent(searchQuery.trim())}`;
-    }
-  };
-
   return (
     <div>
       {/* Hero Banner */}
@@ -136,19 +165,18 @@ export default function HomePage() {
                 placeholder={t('hero.searchPlaceholder')}
                 className="flex-1 bg-transparent text-gray-900 placeholder-gray-400 outline-none"
               />
-              <button
-                type="button"
-                className="flex items-center gap-1 rounded-full bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-700 transition-colors hover:bg-sky-100"
-              >
-                <Upload className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{t('hero.imageSearchHint')}</span>
-              </button>
+              <ImageUpload
+                onImageSelected={setImage}
+                image={image}
+                onRemoveImage={removeImage}
+              />
             </div>
             <button
               type="submit"
-              className="hidden rounded-full bg-white px-8 py-3 font-semibold text-sky-600 transition-colors hover:bg-sky-50 md:block"
+              disabled={searching}
+              className="hidden rounded-full bg-white px-8 py-3 font-semibold text-sky-600 transition-colors hover:bg-sky-50 disabled:opacity-50 md:block"
             >
-              {t('common.search')}
+              {searching ? '...' : t('common.search')}
             </button>
           </form>
         </div>
